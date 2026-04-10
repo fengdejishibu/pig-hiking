@@ -35,7 +35,7 @@ services:
     environment:
       MYSQL_HOST: pig-mysql
       REDIS_HOST: pig-redis
-      NACOS_AUTH_ENABLE: false
+      NACOS_AUTH_DISABLE: true
     container_name: pig-register
     hostname: pig-register
     volumes:
