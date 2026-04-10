@@ -1,13 +1,11 @@
 services:
   pig-mysql:
-    build:
-      context: ./db
+    image: ${REGISTRY:-crpi-tm42n24q2axxf8ej.cn-shenzhen.personal.cr.aliyuncs.com/tubuxitong}/pig-mysql:latest
     environment:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: root
     restart: always
     container_name: pig-mysql
-    image: pig-mysql
     ports:
       - 33306:3306
     volumes:
@@ -28,8 +26,7 @@ services:
       - spring_cloud_default
 
   pig-register:
-    build:
-      context: ./pig-register
+    image: ${REGISTRY:-crpi-tm42n24q2axxf8ej.cn-shenzhen.personal.cr.aliyuncs.com/tubuxitong}/pig-register:latest
     restart: always
     ports:
       - 8848:8848
@@ -40,21 +37,18 @@ services:
       REDIS_HOST: pig-redis
     container_name: pig-register
     hostname: pig-register
-    image: pig-register
     volumes:
       - ./data/nacos:/home/nacos/data
     networks:
       - spring_cloud_default
 
   pig-gateway:
-    build:
-      context: ./pig-gateway
+    image: ${REGISTRY:-crpi-tm42n24q2axxf8ej.cn-shenzhen.personal.cr.aliyuncs.com/tubuxitong}/pig-gateway:latest
     restart: always
     ports:
       - 9999:9999
     container_name: pig-gateway
     hostname: pig-gateway
-    image: pig-gateway
     environment:
       REDIS_HOST: pig-redis
       NACOS_HOST: pig-register
@@ -62,12 +56,10 @@ services:
       - spring_cloud_default
 
   pig-auth:
-    build:
-      context: ./pig-auth
+    image: ${REGISTRY:-crpi-tm42n24q2axxf8ej.cn-shenzhen.personal.cr.aliyuncs.com/tubuxitong}/pig-auth:latest
     restart: always
     container_name: pig-auth
     hostname: pig-auth
-    image: pig-auth
     environment:
       REDIS_HOST: pig-redis
       NACOS_HOST: pig-register
@@ -75,12 +67,10 @@ services:
       - spring_cloud_default
 
   pig-upms:
-    build:
-      context: ./pig-upms/pig-upms-biz
+    image: ${REGISTRY:-crpi-tm42n24q2axxf8ej.cn-shenzhen.personal.cr.aliyuncs.com/tubuxitong}/pig-upms:latest
     restart: always
     container_name: pig-upms
     hostname: pig-upms
-    image: pig-upms
     environment:
       MYSQL_HOST: pig-mysql
       REDIS_HOST: pig-redis
