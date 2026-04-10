@@ -35,10 +35,12 @@ services:
     environment:
       MYSQL_HOST: pig-mysql
       REDIS_HOST: pig-redis
+      NACOS_AUTH_ENABLE: false
     container_name: pig-register
     hostname: pig-register
     volumes:
       - ./data/nacos:/home/nacos/data
+      - ./config/nacos-backup:/home/nacos/conf/config-reload
     networks:
       - spring_cloud_default
 
