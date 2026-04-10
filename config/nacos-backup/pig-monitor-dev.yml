@@ -1,0 +1,8 @@
+spring:
+  autoconfigure:
+    exclude: com.pig4cloud.pig.common.core.config.JacksonConfiguration
+  # 安全配置
+  security:
+    user:
+      name: ENC(8Hk2ILNJM8UTOuW/Xi75qg==)     # pig
+      password: ENC(o6cuPFfUevmTbkmBnE67Ow====) # pig

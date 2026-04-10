@@ -1,0 +1,64 @@
+# 配置文件加密根密码
+jasypt:
+  encryptor:
+    password: pig
+    algorithm: PBEWithMD5AndDES
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator
+    
+# Spring 相关
+spring:
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      password: ${REDIS_PASSWORD:}
+      port: ${REDIS_PORT:6379}
+      database: ${REDIS_DATABASE:0}
+  cloud:
+    sentinel:
+      eager: true
+      transport:
+        dashboard: pig-sentinel:5003
+    openfeign:
+      sentinel:
+        enabled: true
+      okhttp:
+        enabled: true
+      httpclient:
+        enabled: false
+      compression:
+        request:
+          enabled: true
+        response:
+          enabled: true
+
+# 暴露监控端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  
+  endpoint:
+    health:
+      show-details: ALWAYS
+
+# mybaits-plus配置
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*Mapper.xml
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+      table-underline: true
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  type-handlers-package: com.pig4cloud.pig.common.mybatis.handler
+  configuration:
+    map-underscore-to-camel-case: true
+    shrink-whitespaces-in-sql: true
+
+# 短信插件配置：https://www.yuque.com/vxixfq/pig/zw8udk
+sms:
+  is-print: false # 是否打印日志
+  config-type: yaml # 配置类型，yaml

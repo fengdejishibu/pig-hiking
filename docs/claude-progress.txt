@@ -1,0 +1,85 @@
+CLAUDE PROGRESS LOG
+===================
+
+Project: 徒步社区平台 Sprint1 - 权限体系与管理后台联调
+Started: 2026-04-03
+Last Updated: 2026-04-09
+
+SESSION HISTORY
+---------------
+Session 0 - 2026-04-03
+Phase: Initialization
+Work Done:
+  - 分析 Sprint1 需求文档
+  - 创建 feature_list.json，包含 8 个功能
+  - 关闭前端 Mock 模式 (003 PASS)
+  - 实现短信验证码 Mock (004 PASS)
+  - 实现邀请码校验/生成接口 (005/006 PASS)
+
+Session 1 - 2026-04-03
+Phase: Iterative Development
+Feature ID: 002
+Work Done:
+  - 启动 Gateway/Auth/UPMS 三个服务
+  - curl 测试登录接口成功返回 token
+  - curl 测试邀请码校验接口成功
+Status: 功能 002 现已通过
+
+---
+Session 2 - 2026-04-09
+Phase: 需求重定向 - 权限体系 + 管理后台联调
+Analysis:
+  - 数据库字段对齐检查: hiking_leader_apply/post/report 3个实体与init-v2.sql完全匹配 ✅
+  - Sprint2+ 的8张表暂无实体，Sprint1不需要
+  - pig-ui 已内置用户管理/角色管理/菜单动态渲染/OAuth2登录
+  - 核心工作: 初始化菜单/角色SQL → 启动服务 → 联调验证
+Feature List Updated:
+  - S1-001 ~ S1-008: 8个功能，全部 critical
+  - 聚焦: admin登录 → 创建用户(选角色) → 不同角色看到不同菜单
+Status: 准备开始实施 S1-001 (基础设施启动)
+
+Status: 8/8 features ALL PASSING
+
+---
+Session 3 - 2026-04-09
+Phase: Implementation Complete
+Work Done:
+  - S1-001: 基础设施验证 (Docker MySQL/Redis/Nacos 全部 healthy)
+  - S1-002: 数据库字段对齐 (3个实体与SQL完全匹配)
+  - S1-003: 24个菜单插入 sys_menu (menu_id 10000+)
+  - S1-004: 7个角色 + 角色菜单关联 + admin双角色
+  - S1-005: 后端联调 (关闭captcha，admin/123456登录成功)
+  - S1-006: pig-ui前端联调 (localhost:8889，用户中心菜单可见)
+  - S1-007: 创建ops001运营专员用户，登录成功
+  - S1-008: 权限闭环验证 (ops001只看用户中心，admin看全部)
+
+Key Changes:
+  - db/init-hiking-permission.sql: 菜单/角色/权限初始化SQL
+  - pig-ui/src/views/hiking/user/index.vue: 用户管理占位页
+  - pig-ui/src/views/hiking/leader/index.vue: 领队认证占位页
+  - Nacos pig-auth-dev.yml: ignore-clients 加入 pig
+  - sys_oauth_client_details: captcha_flag=0, enc_flag=0
+
+Testing:
+  - admin 登录: PASS (5个顶级菜单全部可见)
+  - ops001 登录: PASS (只有用户中心)
+  - 角色权限隔离: PASS
+
+Total features passing: 8/8 (ALL COMPLETE)
+
+---
+Session 4 - 2026-04-09
+Phase: Cleanup - 非业务内容清理
+Work Done:
+  - 创建 db/cleanup-menus.sql 清理脚本
+  - 数据库: 删除40+条非业务菜单(岗位/参数/终端/令牌/Quartz/系统监控/开发平台)
+  - 前端: 删除 views/gen, daemon, ext, admin/{client,dept,param,post} 共7个目录
+  - 前端: 删除 api/gen, api/daemon 目录 + 4个孤立API文件
+  - 更新占位页文本为"施工中，未来开放"
+
+Remaining Structure:
+  - views/: admin(dict/file/log/menu/role/token/user) + hiking(user/leader) + home + login + error
+  - menus: 权限管理(用户/菜单/角色) + 系统管理(日志/字典/文件) + 用户中心(徒步业务)
+  - Sprint2+ 菜单保留为 del_flag=1，待实现时激活
+
+Total features passing: 9/9 (ALL COMPLETE)

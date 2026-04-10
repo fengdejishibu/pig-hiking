@@ -1,0 +1,26 @@
+spring:
+  freemarker:
+    allow-request-override: false
+    allow-session-override: false
+    cache: true
+    charset: UTF-8
+    check-template-location: true
+    content-type: text/html
+    enabled: true
+    request-context-attribute: request
+    expose-request-attributes: false
+    expose-session-attributes: false
+    expose-spring-macro-helpers: true
+    prefer-file-system-access: true
+    suffix: .ftl
+    template-loader-path: classpath:/templates/
+
+security:
+  encode-key: thanks,pig4cloud
+  ignore-clients:
+    - test
+    - client
+    - open
+    - app
+    - pig
+    - pig

@@ -1,0 +1,93 @@
+{
+  "project_name": "徒步社区平台 Sprint1 - 权限体系与管理后台联调",
+  "description": "Sprint1 核心目标：admin/123456 登录 → 创建用户（选角色）→ 不同角色看到不同菜单",
+  "tech_stack": {
+    "frontend": "Vue 3.5 + Vite 5 + Element Plus 2 + TypeScript (pig-ui)",
+    "backend": "Spring Boot 3.5 + Spring Cloud 2025 + MyBatis Plus (pig-upms)",
+    "database": "MySQL 8.0 (pig库) + Redis 7 + Nacos 2.2.3",
+    "infra": "Docker Compose"
+  },
+  "features": [
+    {
+      "id": "S1-001",
+      "category": "functional",
+      "priority": "critical",
+      "description": "基础设施启动与验证",
+      "steps": ["docker-compose up -d 验证 MySQL/Redis/Nacos"],
+      "passes": true,
+      "notes": "全部 healthy，pig 库含 sys_menu/sys_role/sys_user 等核心表"
+    },
+    {
+      "id": "S1-002",
+      "category": "data",
+      "priority": "critical",
+      "description": "数据库字段对齐验证",
+      "steps": ["对比 init-v2.sql 与 Java 实体类字段"],
+      "passes": true,
+      "notes": "3个现有实体与SQL完全匹配，Sprint2+的8张表暂不需要实体"
+    },
+    {
+      "id": "S1-003",
+      "category": "data",
+      "priority": "critical",
+      "description": "菜单数据初始化 (sys_menu)",
+      "steps": ["INSERT 24个菜单，menu_id从10000开始"],
+      "passes": true,
+      "notes": "Sprint1菜单启用(10000-10021)，Sprint2+菜单禁用(del_flag=1)"
+    },
+    {
+      "id": "S1-004",
+      "category": "data",
+      "priority": "critical",
+      "description": "角色数据初始化 (sys_role + sys_role_menu)",
+      "steps": ["INSERT 7个角色 + 角色菜单关联"],
+      "passes": true,
+      "notes": "admin拥有ROLE_ADMIN+SUPER_ADMIN双角色"
+    },
+    {
+      "id": "S1-005",
+      "category": "functional",
+      "priority": "critical",
+      "description": "后端服务启动与 admin 登录验证",
+      "steps": ["Gateway/Auth/UPMS启动，curl登录获取token"],
+      "passes": true,
+      "notes": "admin/123456登录成功。关闭了captcha，pig加入ignore-clients"
+    },
+    {
+      "id": "S1-006",
+      "category": "functional",
+      "priority": "critical",
+      "description": "前端 pig-ui 连接后端并登录",
+      "steps": ["pig-ui代理指向Gateway，登录成功，菜单加载"],
+      "passes": true,
+      "notes": "pig-ui在localhost:8889，用户中心菜单可见，占位页面已创建"
+    },
+    {
+      "id": "S1-007",
+      "category": "functional",
+      "priority": "critical",
+      "description": "超管创建用户并分配角色",
+      "steps": ["API创建ops001用户，关联运营专员角色，登录成功"],
+      "passes": true,
+      "notes": "ops001/123456登录成功，拥有ROLE_102"
+    },
+    {
+      "id": "S1-008",
+      "category": "functional",
+      "priority": "critical",
+      "description": "角色菜单权限闭环验证",
+      "steps": ["ops001只看到用户中心，admin看到全部"],
+      "passes": true,
+      "notes": "权限闭环完成！ops001只看到用户管理+领队认证，无系统管理"
+    },
+    {
+      "id": "S1-009",
+      "category": "cleanup",
+      "priority": "high",
+      "description": "清理非业务内容：删除pig框架默认的岗位/参数/终端/令牌/Quartz/系统监控/开发平台菜单及前端文件",
+      "steps": ["删除sys_menu中非业务菜单", "删除pig-ui中gen/daemon/ext等目录", "更新占位页文本"],
+      "passes": true,
+      "notes": "数据库删除40+条菜单，前端删除7个views目录+6个API文件，占位页改为'施工中，未来开放'"
+    }
+  ]
+}

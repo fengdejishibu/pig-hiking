@@ -1,0 +1,86 @@
+# 本地开发中间件 - 统一配置
+# 使用方式: docker-compose -f docker-compose.infra.yml up -d
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: hiking-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Shanghai
+    volumes:
+      # 初始化脚本 - 按文件名字典序执行 (01→02→03)
+      - ./pig.sql:/docker-entrypoint-initdb.d/01-pig.sql
+      - ./pig_config.sql:/docker-entrypoint-initdb.d/02-pig_config.sql
+      - ./init-v2.sql:/docker-entrypoint-initdb.d/03-hiking_db.sql
+      # 数据持久化
+      - mysql_data:/var/lib/mysql
+      # 数据持久化
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: hiking-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nacos:
+    image: nacos/nacos-server:v2.2.3
+    container_name: hiking-nacos
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    environment:
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: mysql
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_DB_NAME: pig_config
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: root
+      MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=10000&socketTimeout=30000&autoReconnect=true&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      JVM_XMS: 512m
+      JVM_XMX: 512m
+      JVM_XMN: 256m
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mongo:
+    image: mongo:5.0
+    container_name: hiking-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./init-mongodb-v2.js:/docker-entrypoint-initdb.d/init-mongodb.js
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
+  redis_data:
+  mongo_data:

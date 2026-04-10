@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pig 微服务架构全貌学习指南</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .nav {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .nav h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .nav-links a {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .nav-links a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .section h2 {
+            color: #333;
+            border-left: 5px solid #667eea;
+            padding-left: 15px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .section h3 {
+            color: #555;
+            margin: 20px 0 15px 0;
+            font-size: 1.2em;
+        }
+        .tip-box {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-left: 4px solid #667eea;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        .tip-box strong {
+            color: #667eea;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .comparison-table tr:hover {
+            background: #f8f9ff;
+        }
+        .comparison-table code {
+            background: #f4f4f4;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            color: #e83e8c;
+        }
+        .architecture-diagram {
+            background: #1a1a2e;
+            border-radius: 15px;
+            padding: 30px;
+            color: #eee;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.4;
+        }
+        .architecture-diagram .service {
+            color: #4fc3f7;
+        }
+        .architecture-diagram .port {
+            color: #81c784;
+        }
+        .architecture-diagram .arrow {
+            color: #ffb74d;
+        }
+        .architecture-diagram .comment {
+            color: #888;
+        }
+        .service-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        .service-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .service-item:hover {
+            transform: translateY(-5px);
+        }
+        .service-item h4 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        .service-item .port {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+        }
+        .service-item p {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        .flow-diagram {
+            background: #fafafa;
+            border: 2px dashed #ddd;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .flow-step .number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .flow-step .content h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .flow-step .content p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .code-block {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        .code-block pre {
+            color: #abb2bf;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9em;
+            margin: 0;
+        }
+        .code-block .keyword { color: #c678dd; }
+        .code-block .string { color: #98c379; }
+        .code-block .comment { color: #5c6370; font-style: italic; }
+        .code-block .function { color: #61afef; }
+        .faq-item {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .faq-item h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .faq-item h4::before {
+            content: "Q";
+            background: #667eea;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 0.8em;
+        }
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .summary-card h4 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .summary-card p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 30px;
+            opacity: 0.8;
+        }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8em; }
+            .section { padding: 20px; }
+            .comparison-table { font-size: 0.85em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🐷 Pig 微服务架构全貌学习指南</h1>
+            <p>从 C++/Python 到 Java 微服务的完整认知地图</p>
+        </header>
+
+        <nav class="nav">
+            <h3>📚 快速导航</h3>
+            <div class="nav-links">
+                <a href="#concept">概念对照</a>
+                <a href="#microservice">什么是微服务</a>
+                <a href="#nacos">Nacos 注册中心</a>
+                <a href="#lifecycle">请求生命周期</a>
+                <a href="#feign">服务间通信</a>
+                <a href="#rbac">权限控制</a>
+                <a href="#response">统一响应</a>
+                <a href="#startup">启动流程</a>
+                <a href="#faq">常见问题</a>
+                <a href="#summary">核心速记</a>
+            </div>
+        </nav>
+
+        <!-- 第一章：核心概念对照 -->
+        <section id="concept" class="section">
+            <h2>第一章：核心概念对照表</h2>
+            <div class="tip-box">
+                <strong>💡 学习方法：</strong>用你已经熟悉的 C++ / Python 概念，来理解陌生的 Java 微服务概念。
+            </div>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>C++/Python 概念</th>
+                        <th>Java 微服务对应</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>#include</code> / <code>import</code></td>
+                        <td><code>Maven (pom.xml)</code></td>
+                        <td>管理第三方库依赖</td>
+                    </tr>
+                    <tr>
+                        <td><code>class Student:</code></td>
+                        <td><code>public class Student {}</code></td>
+                        <td>类定义语法</td>
+                    </tr>
+                    <tr>
+                        <td><code>__init__(self)</code></td>
+                        <td><code>构造函数 Student()</code></td>
+                        <td>对象初始化</td>
+                    </tr>
+                    <tr>
+                        <td>虚函数 / 抽象类</td>
+                        <td><code>interface</code> + <code>implements</code></td>
+                        <td>定义契约/接口</td>
+                    </tr>
+                    <tr>
+                        <td>全局变量</td>
+                        <td><code>@Component</code> Spring Bean</td>
+                        <td>单例，全局可访问</td>
+                    </tr>
+                    <tr>
+                        <td><code>requests.get()</code></td>
+                        <td><code>RestTemplate</code> / Feign</td>
+                        <td>HTTP 调用</td>
+                    </tr>
+                    <tr>
+                        <td><code>.env</code> 文件</td>
+                        <td><code>application.yml</code></td>
+                        <td>配置文件</td>
+                    </tr>
+                    <tr>
+                        <td>Docker Compose</td>
+                        <td>Nacos + Spring Cloud</td>
+                        <td>服务编排管理</td>
+                    </tr>
+                    <tr>
+                        <td>Nginx 反向代理</td>
+                        <td>Spring Cloud Gateway</td>
+                        <td>API 网关</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 第二章：什么是微服务 -->
+        <section id="microservice" class="section">
+            <h2>第二章：什么是微服务？</h2>
+
+            <h3>2.1 传统单体 vs 微服务</h3>
+            <div class="tip-box">
+                <strong>🏠 类比理解：</strong>想象你开了一家餐厅
+            </div>
+
+            <div class="service-card">
+                <div class="service-item">
+                    <h4>单体架构 <span class="port">❌</span></h4>
+                    <p><strong>一个超级服务员</strong></p>
+                    <p>一个人负责：点菜、做饭、上菜、结账、打扫</p>
+                    <p style="color: #e74c3c;">缺点：这个服务员病了，整个餐厅停业</p>
+                </div>
+                <div class="service-item">
+                    <h4>微服务架构 <span class="port">✅</span></h4>
+                    <p><strong>专业分工团队</strong></p>
+                    <p>点菜员、厨师、收银员各司其职</p>
+                    <p style="color: #27ae60;">优点：厨师病了，点菜和收银还能工作</p>
+                </div>
+            </div>
+
+            <h3>2.2 Pig 项目服务架构</h3>
+            <div class="architecture-diagram">
+┌─────────────────────────────────────────────────────────────────┐
+│                      🐷 Pig 微服务全家桶                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
+│  │ pig-gateway │    │  pig-auth   │    │  pig-upms   │         │
+│  │   (网关)     │    │  (认证)     │    │ (用户权限)   │         │
+│  │  端口:9999   │    │  端口:3000  │    │  端口:4000  │         │
+│  └─────────────┘    └─────────────┘    └─────────────┘         │
+│         │                  │                  │                 │
+│         └──────────────────┼──────────────────┘                 │
+│                            │                                    │
+│                     ┌──────▼──────┐                            │
+│                     │    Nacos    │ ← 注册中心（服务电话簿）      │
+│                     │  端口:8848  │                            │
+│                     └─────────────┘                            │
+│                            │                                    │
+│         ┌──────────────────┼──────────────────┐                 │
+│         │                  │                  │                 │
+│  ┌──────▼──────┐    ┌──────▼──────┐    ┌──────▼──────┐         │
+│  │ pig-monitor │    │ pig-codegen │    │ pig-quartz  │         │
+│  │   (监控)     │    │ (代码生成)   │    │ (定时任务)   │         │
+│  │  端口:5001  │    │  端口:5002  │    │  端口:5007  │         │
+│  └─────────────┘    └─────────────┘    └─────────────┘         │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+            </div>
+        </section>
+
+        <!-- 第三章：Nacos -->
+        <section id="nacos" class="section">
+            <h2>第三章：Nacos 注册中心</h2>
+
+            <h3>3.1 为什么需要 Nacos？</h3>
+            <div class="tip-box">
+                <strong>📞 类比理解：</strong>
+                <br>没有 Nacos：你想找张三，但你不知道他在哪，你得记住他的手机号、地址。张三搬家了，你就找不到他了。
+                <br><br>
+                有 Nacos：你想找张三，查电话簿（Nacos）。电话簿实时更新张三的联系方式，即使张三搬家了，电话簿也会更新。
+            </div>
+
+            <h3>3.2 服务注册流程</h3>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="number">1</div>
+                    <div class="content">
+                        <h4>服务启动</h4>
+                        <p>pig-auth 服务启动，读取配置文件中的 Nacos 地址</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="number">2</div>
+                    <div class="content">
+                        <h4>发送注册请求</h4>
+                        <p>向 Nacos 发送：服务名=pig-auth, IP=192.168.1.100, 端口=3000</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="number">3</div>
+                    <div class="content">
+                        <h4>心跳保活</h4>
+                        <p>每 5 秒发送一次心跳，告诉 Nacos "我还活着"</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="number">4</div>
+                    <div class="content">
+                        <h4>服务发现</h4>
+                        <p>其他服务查询 "pig-auth" 时，Nacos 返回可用实例列表</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第四章：请求生命周期 -->
+        <section id="lifecycle" class="section">
+            <h2>第四章：请求生命周期</h2>
+
+            <h3>4.1 用户登录获取 Token</h3>
+            <div class="architecture-diagram">
+用户浏览器
+    │
+    │ POST /auth/oauth2/token
+    │ Body: username=admin&password=123456
+    ▼
+┌─────────────────────────────────────────────────────┐
+│                  pig-gateway (9999)                  │
+│  ┌───────────────────────────────────────────────┐  │
+│  │ PigRequestGlobalFilter                        │  │
+│  │  1. 清洗请求头                                 │  │
+│  │  2. 路由到 pig-auth                           │  │
+│  └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────┐
+│                   pig-auth (3000)                    │
+│  ┌───────────────────────────────────────────────┐  │
+│  │ 1. 验证用户名密码                               │  │
+│  │    调用 pig-upms 查询用户信息                   │  │
+│  │                                               │  │
+│  │ 2. 生成 OAuth2 Token                          │  │
+│  │    存储到 Redis: pig_oauth_access::{token}     │  │
+│  │                                               │  │
+│  │ 3. 返回 Token 给用户                           │  │
+│  └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
+            </div>
+
+            <h3>4.2 后续请求（携带 Token）</h3>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="number">1</div>
+                    <div class="content">
+                        <h4>请求到达 Gateway</h4>
+                        <p>GET /admin/user/page，携带 Authorization: Bearer xxx</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="number">2</div>
+                    <div class="content">
+                        <h4>Token 验证</h4>
+                        <p>Gateway 解析 Token，验证有效性，提取用户信息</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="number">3</div>
+                    <div class="content">
+                        <h4>路由转发</h4>
+                        <p>转发到 pig-upms 服务</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="number">4</div>
+                    <div class="content">
+                        <h4>权限检查</h4>
+                        <p>@HasPermission("sys_user_view") 检查用户权限</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="number">5</div>
+                    <div class="content">
+                        <h4>返回结果</h4>
+                        <p>执行业务逻辑，返回 R.ok(data)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第五章：Feign -->
+        <section id="feign" class="section">
+            <h2>第五章：服务间通信（Feign）</h2>
+
+            <h3>5.1 什么是 Feign？</h3>
+            <div class="tip-box">
+                <strong>类比理解：</strong>Feign 让你像调用本地方法一样调用远程服务，不需要关心 HTTP 请求细节。
+            </div>
+
+            <div class="code-block">
+                <pre>
+<span class="comment">// 定义 Feign 客户端接口</span>
+<span class="keyword">@FeignClient</span>(name = <span class="string">"pig-upms"</span>)  <span class="comment">// 只需要服务名</span>
+<span class="keyword">public interface</span> <span class="function">RemoteUserService</span> {
+    <span class="keyword">@GetMapping</span>(<span class="string">"/user/{id}"</span>)
+    R&lt;UserDTO&gt; <span class="function">getUser</span>(<span class="keyword">@PathVariable</span>(<span class="string">"id"</span>) Long id);
+}
+
+<span class="comment">// 使用时像调用本地方法一样</span>
+<span class="keyword">@Autowired</span>
+<span class="keyword">private</span> RemoteUserService remoteUserService;
+
+<span class="keyword">public void</span> <span class="function">doSomething</span>() {
+    R&lt;UserDTO&gt; result = remoteUserService.<span class="function">getUser</span>(1L);  <span class="comment">// 自动负载均衡</span>
+}
+                </pre>
+            </div>
+
+            <h3>5.2 Feign 工作原理</h3>
+            <div class="architecture-diagram">
+┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+│   服务 A      │      │    Nacos     │      │   服务 B      │
+│              │      │              │      │              │
+│ remoteUser   │      │  注册表:      │      │  /user/{id}  │
+│ .getUser(1)  │      │  pig-upms:   │      │              │
+│      │       │      │  192.168.1.100│      │              │
+│      ▼       │      │  192.168.1.101│      │              │
+│ ┌────────┐   │      │  192.168.1.102│      │              │
+│ │ Feign  │───┼─────►│  查询地址    │      │              │
+│ │ 代理   │   │      │      │       │      │              │
+│ └────────┘   │      │      ▼       │      │              │
+│      │       │      │  负载均衡     │      │              │
+│      │       │      │  (轮询)       │      │              │
+│      └─────────────────────────────┼──────►│              │
+│                  HTTP GET /user/1  │      │              │
+└──────────────┘                    └──────┼──────────────┘
+                                          │
+                                    返回结果 ◄─┘
+            </div>
+        </section>
+
+        <!-- 第六章：RBAC -->
+        <section id="rbac" class="section">
+            <h2>第六章：权限控制（RBAC）</h2>
+
+            <h3>6.1 RBAC 模型</h3>
+            <div class="tip-box">
+                <strong>RBAC</strong> = Role-Based Access Control（基于角色的访问控制）
+                <br><br>
+                <strong>类比理解：</strong>公司组织架构 - 用户 → 角色 → 权限
+            </div>
+
+            <h3>6.2 数据表关系</h3>
+            <div class="architecture-diagram">
+┌──────────────┐       ┌──────────────┐       ┌──────────────┐
+│   sys_user   │       │sys_user_role │       │   sys_role   │
+│──────────────│       │──────────────│       │──────────────│
+│ user_id (PK) │──────►│ user_id (FK) │◄─────►│ role_id (PK) │
+│ username     │       │ role_id (FK) │       │ role_name    │
+│ password     │       └──────────────┘       │ role_code    │
+│ dept_id      │                              └──────┬───────┘
+└──────────────┘                                     │
+                                                     │
+┌──────────────┐       ┌──────────────┐             │
+│  sys_menu    │       │sys_role_menu │◄────────────┘
+│──────────────│       │──────────────│
+│ menu_id (PK) │◄─────►│ role_id (FK) │
+│ menu_name    │       │ menu_id (FK) │
+│ permission   │       └──────────────┘
+│ path         │
+└──────────────┘
+
+<span class="comment">/* 权限检查流程 */</span>
+用户 → 角色 → 菜单 → 权限标识
+admin → 管理员 → 用户管理 → sys_user_view
+            </div>
+
+            <h3>6.3 代码中的权限检查</h3>
+            <div class="code-block">
+                <pre>
+<span class="keyword">@RestController</span>
+<span class="keyword">@RequestMapping</span>(<span class="string">"/user"</span>)
+<span class="keyword">public class</span> <span class="function">SysUserController</span> {
+
+    <span class="keyword">@GetMapping</span>(<span class="string">"/page"</span>)
+    <span class="keyword">@HasPermission</span>(<span class="string">"sys_user_view"</span>)  <span class="comment">// 权限检查</span>
+    <span class="keyword">public</span> R&lt;Page&gt; <span class="function">getUserPage</span>() {
+        <span class="keyword">return</span> userService.<span class="function">getPage</span>();
+    }
+
+    <span class="keyword">@DeleteMapping</span>
+    <span class="keyword">@HasPermission</span>(<span class="string">"sys_user_del"</span>)  <span class="comment">// 删除权限</span>
+    <span class="keyword">public</span> R <span class="function">userDel</span>(Long[] ids) {
+        <span class="keyword">return</span> userService.<span class="function">removeByIds</span>(ids);
+    }
+}
+                </pre>
+            </div>
+        </section>
+
+        <!-- 第七章：统一响应 -->
+        <section id="response" class="section">
+            <h2>第七章：统一响应格式</h2>
+
+            <h3>7.1 R 响应对象</h3>
+            <div class="code-block">
+                <pre>
+<span class="comment">// 所有接口返回统一格式</span>
+<span class="keyword">public class</span> <span class="function">R</span>&lt;T&gt; {
+    <span class="keyword">private int</span> code;       <span class="comment">// 状态码：0=成功，1=失败</span>
+    <span class="keyword">private</span> String msg;     <span class="comment">// 提示信息</span>
+    <span class="keyword">private</span> T data;         <span class="comment">// 数据内容</span>
+
+    <span class="comment">// 成功响应</span>
+    <span class="keyword">public static</span> &lt;T&gt; R&lt;T&gt; <span class="function">ok</span>(T data) {
+        R&lt;T&gt; r = <span class="keyword">new</span> R&lt;&gt;();
+        r.setCode(0);
+        r.setMsg(<span class="string">"success"</span>);
+        r.setData(data);
+        <span class="keyword">return</span> r;
+    }
+
+    <span class="comment">// 失败响应</span>
+    <span class="keyword">public static</span> &lt;T&gt; R&lt;T&gt; <span class="function">failed</span>(String msg) {
+        R&lt;T&gt; r = <span class="keyword">new</span> R&lt;&gt;();
+        r.setCode(1);
+        r.setMsg(msg);
+        <span class="keyword">return</span> r;
+    }
+}
+                </pre>
+            </div>
+
+            <h3>7.2 响应示例</h3>
+            <div class="code-block">
+                <pre>
+<span class="comment">// 成功响应</span>
+{
+    <span class="string">"code"</span>: 0,
+    <span class="string">"msg"</span>: <span class="string">"success"</span>,
+    <span class="string">"data"</span>: {
+        <span class="string">"userId"</span>: 1,
+        <span class="string">"username"</span>: <span class="string">"admin"</span>,
+        <span class="string">"nickname"</span>: <span class="string">"管理员"</span>
+    }
+}
+
+<span class="comment">// 失败响应</span>
+{
+    <span class="string">"code"</span>: 1,
+    <span class="string">"msg"</span>: <span class="string">"用户名或密码错误"</span>,
+    <span class="string">"data"</span>: <span class="keyword">null</span>
+}
+                </pre>
+            </div>
+        </section>
+
+        <!-- 第八章：启动流程 -->
+        <section id="startup" class="section">
+            <h2>第八章：项目启动流程</h2>
+
+            <h3>8.1 启动顺序</h3>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="number">1</div>
+                    <div class="content">
+                        <h4>基础设施</h4>
+                        <p>MySQL (3306) → Redis (6379) → Nacos (8848)</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="number">2</div>
+                    <div class="content">
+                        <h4>核心服务</h4>
+                        <p>pig-upms (4000) → pig-auth (3000) → pig-gateway (9999)</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="number">3</div>
+                    <div class="content">
+                        <h4>扩展服务（可选）</h4>
+                        <p>pig-monitor (5001) → pig-codegen (5002) → pig-quartz (5007)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第九章：FAQ -->
+        <section id="faq" class="section">
+            <h2>第九章：常见问题 FAQ</h2>
+
+            <div class="faq-item">
+                <h4>Nacos 和 Eureka 有什么区别？</h4>
+                <table class="comparison-table">
+                    <tr>
+                        <th>特性</th>
+                        <th>Nacos</th>
+                        <th>Eureka</th>
+                    </tr>
+                    <tr>
+                        <td>配置中心</td>
+                        <td>✅ 支持</td>
+                        <td>❌ 不支持</td>
+                    </tr>
+                    <tr>
+                        <td>健康检查</td>
+                        <td>TCP/HTTP/MySQL</td>
+                        <td>仅 HTTP</td>
+                    </tr>
+                    <tr>
+                        <td>社区活跃度</td>
+                        <td>阿里维护，活跃</td>
+                        <td>Netflix 停止维护</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="faq-item">
+                <h4>@Inner 注解是什么意思？</h4>
+                <p><code>@Inner</code> 表示这个接口只允许内部服务调用：</p>
+                <ul>
+                    <li>外部请求（浏览器）不能直接调用</li>
+                    <li>只有 Feign 内部调用（带有 from=Y 请求头）才能访问</li>
+                    <li>防止外部直接绕过网关调用内部接口</li>
+                </ul>
+            </div>
+
+            <div class="faq-item">
+                <h4>为什么要用 Redis 存储 Token？</h4>
+                <ul>
+                    <li><strong>性能：</strong>Redis 是内存数据库，读取速度极快</li>
+                    <li><strong>过期：</strong>Redis 支持 TTL，Token 过期自动删除</li>
+                    <li><strong>分布式：</strong>多个服务实例可以共享 Token 状态</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 第十章：核心速记 -->
+        <section id="summary" class="section">
+            <h2>第十章：核心概念速记卡</h2>
+
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <h4>🎯 Nacos</h4>
+                    <p>服务电话簿，所有服务启动时来这登记</p>
+                </div>
+                <div class="summary-card">
+                    <h4>🚪 Gateway</h4>
+                    <p>统一大门，所有请求先经过这里</p>
+                </div>
+                <div class="summary-card">
+                    <h4>📞 Feign</h4>
+                    <p>远程调用，像调本地方法一样调其他服务</p>
+                </div>
+                <div class="summary-card">
+                    <h4>🎫 OAuth2</h4>
+                    <p>身份证系统，登录后颁发 Token</p>
+                </div>
+                <div class="summary-card">
+                    <h4>🔐 RBAC</h4>
+                    <p>权限模型：用户 → 角色 → 权限</p>
+                </div>
+                <div class="summary-card">
+                    <h4>⚡ Redis</h4>
+                    <p>内存数据库，存 Token 和缓存</p>
+                </div>
+                <div class="summary-card">
+                    <h4>🔒 @Inner</h4>
+                    <p>内部接口，外部不能直接访问</p>
+                </div>
+                <div class="summary-card">
+                    <h4>📦 R</h4>
+                    <p>统一响应格式 {code, msg, data}</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>🐷 Pig 微服务架构学习指南 v1.0</p>
+            <p>适用项目：pig-4.x | 生成时间：2025-03-30</p>
+        </footer>
+    </div>
+</body>
+</html>

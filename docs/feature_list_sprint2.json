@@ -1,0 +1,169 @@
+{
+  "project_name": "小程序用户系统对接 pig 后端 (Sprint2)",
+  "description": "将 UniApp 小程序 (AppDemo) 的用户系统与 pig 微服务后端完整对接，实现 US-01~US-06 六个用户故事",
+  "tech_stack": {
+    "frontend": "UniApp Vue3 + Pinia (D:\\2_Study\\coding\\AppDemo)",
+    "backend": "Spring Cloud pig (D:\\2_Study\\coding\\pig)",
+    "gateway": "pig-gateway :9999",
+    "auth": "pig-auth OAuth2 + JWT",
+    "database": "MySQL 8.0 (Docker pig-mysql)",
+    "cache": "Redis (Docker pig-redis)",
+    "sms": "SMS4J (Mock→阿里云短信)",
+    "oss": "pig-common-oss (本地→MinIO→云OSS)"
+  },
+  "features": [
+    {
+      "id": "F01",
+      "category": "functional",
+      "priority": "critical",
+      "description": "配置小程序 OAuth2 Client — sys_oauth_client_details 新增 hiking_app 客户端",
+      "steps": [
+        "在 sys_oauth_client_details 表插入 hiking_app 客户端记录",
+        "client_id=hiking_app, authorized_grant_types 包含 password,mobile,refresh_token",
+        "使用新客户端调 POST /auth/oauth2/token grant_type=password 验证通过",
+        "使用新客户端调 POST /auth/oauth2/token grant_type=mobile 验证通过"
+      ],
+      "passes": false,
+      "notes": "复用现有 OAuth2 体系，仅新增客户端记录"
+    },
+    {
+      "id": "F02",
+      "category": "data",
+      "priority": "critical",
+      "description": "hiking_user_profile 建表 + DDL",
+      "steps": [
+        "创建 hiking_user_profile 表 DDL (参照 HikingUserProfile 实体)",
+        "字段: id, user_id, gender(0保密1男2女), birthday, signature, is_leader, is_vip, vip_expire_time, level, total_distance",
+        "添加到 db/ 目录下独立 SQL 文件",
+        "在 Docker 环境中执行建表验证"
+      ],
+      "passes": false,
+      "notes": "F05/F07 的前置依赖。实体类已存在于 pig-upms-api"
+    },
+    {
+      "id": "F03",
+      "category": "functional",
+      "priority": "critical",
+      "description": "US-05 账号登录 — 密码+短信验证码双模式",
+      "steps": [
+        "密码登录: POST /auth/oauth2/token grant_type=password — 后端已有",
+        "验证码登录: GET /admin/mobile/{phone} 发码 + POST /auth/oauth2/token grant_type=mobile — 后端已有",
+        "确认小程序 src/api/auth.js 的 client_id/secret 与 hiking_app 匹配",
+        "端到端测试: 两种登录方式均成功获取 token"
+      ],
+      "passes": false,
+      "notes": "后端+前端均已实现。核心工作是配置+参数对齐"
+    },
+    {
+      "id": "F04",
+      "category": "functional",
+      "priority": "critical",
+      "description": "US-04 手机号注册 — 手机号+验证码+密码",
+      "steps": [
+        "新增端点: GET /admin/mobile/register/{phone} 给未注册手机发验证码",
+        "扩展 RegisterUserDTO 增加 code 字段",
+        "SysRegisterController.registerUser() 增加验证码校验",
+        "小程序注册页调注册发码→输入验证码→POST /admin/register/user",
+        "注册成功跳转登录页"
+      ],
+      "passes": false,
+      "notes": "需修改: SysMobileController, RegisterUserDTO, SysRegisterController"
+    },
+    {
+      "id": "F05",
+      "category": "functional",
+      "priority": "high",
+      "description": "US-02 修改密码",
+      "steps": [
+        "后端 PUT /admin/user/password 已有",
+        "确认小程序 API 调用参数匹配: password(旧), newpassword1(新), newpassword2(确认)",
+        "端到端测试成功"
+      ],
+      "passes": false,
+      "notes": "直接复用，确认前端参数对齐"
+    },
+    {
+      "id": "F06",
+      "category": "functional",
+      "priority": "high",
+      "description": "US-03 资料编辑 — 头像/昵称/性别/签名",
+      "steps": [
+        "头像上传: POST /admin/sys-file/upload → 获得 URL",
+        "资料更新: 扩展 hiking_user_profile 的资料编辑接口 (gender/birthday/signature)",
+        "昵称/avatar 走 sys_user 的 PUT /admin/user/edit",
+        "小程序已有完整 UI (edit-profile, edit-nickname, edit-signature)",
+        "端到端测试: 修改昵称/签名/头像均成功"
+      ],
+      "passes": false,
+      "notes": "pig-common-oss 本地存储已可用。需扩展 hiking_user_profile 的 CRUD"
+    },
+    {
+      "id": "F07",
+      "category": "functional",
+      "priority": "high",
+      "description": "US-01 注销账号 — 软删除+Token清理",
+      "steps": [
+        "新增端点: DELETE /admin/user/cancel",
+        "实现: del_flag='1' + 清除Token + 清Redis缓存",
+        "注销后跳转登录页",
+        "验证注销后无法再登录"
+      ],
+      "passes": false,
+      "notes": "复用 removeUserByIds 软删除逻辑 + Token 清理逻辑"
+    },
+    {
+      "id": "F08",
+      "category": "functional",
+      "priority": "high",
+      "description": "US-06 用户身份标识显示 — 领队/VIP/等级",
+      "steps": [
+        "扩展 GET /admin/user/info 关联 hiking_user_profile 数据",
+        "返回 is_leader/is_vip/level 等字段",
+        "小程序个人中心页展示身份标识",
+        "端到端测试验证"
+      ],
+      "passes": false,
+      "notes": "依赖 F02 的 hiking_user_profile 表"
+    },
+    {
+      "id": "F09",
+      "category": "security",
+      "priority": "high",
+      "description": "短信验证码防刷策略",
+      "steps": [
+        "同一手机号60秒限制(已有)",
+        "新增: 每日上限10次",
+        "CODE_TIME 从60s改为300s",
+        "验证码错误5次锁定30分钟"
+      ],
+      "passes": false,
+      "notes": "修改: SysMobileServiceImpl, SecurityConstants"
+    },
+    {
+      "id": "F10",
+      "category": "functional",
+      "priority": "medium",
+      "description": "前端 API 全面对齐调试",
+      "steps": [
+        "检查 src/api/auth.js 路径和参数",
+        "检查 client_id/client_secret 配置",
+        "检查注册 API 参数(需加 code)",
+        "端到端测试: 注册→登录→编辑资料→改密→注销 完整流程"
+      ],
+      "passes": false,
+      "notes": "最后集成测试阶段执行"
+    }
+  ],
+  "dependencies": {
+    "F01": [],
+    "F02": [],
+    "F03": ["F01"],
+    "F04": ["F01", "F09"],
+    "F05": ["F01"],
+    "F06": ["F02"],
+    "F07": ["F01"],
+    "F08": ["F02"],
+    "F09": [],
+    "F10": ["F03", "F04", "F05", "F06", "F07", "F08"]
+  }
+}

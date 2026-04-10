@@ -1,0 +1,37 @@
+# CNB CI/CD 流水线配置
+# 平台: cnb.cool
+
+version: 1.0
+
+pipelines:
+  build:
+    docker:
+      registry: crpi-tm42n24q2axxf8ej.cn-shenzhen.personal.cr.aliyuncs.com
+      namespace: tubuxitong
+      image: tubuxingzou
+      tag: latest
+
+  deploy:
+    stages:
+      - name: build
+        steps:
+          - name: docker-build
+            command: |
+              docker build -t ${IMAGE} .
+
+      - name: push
+        steps:
+          - name: docker-push
+            command: |
+              docker login ${REGISTRY} -u ${USERNAME} -p ${PASSWORD}
+              docker push ${IMAGE}
+
+      - name: deploy
+        steps:
+          - name: remote-deploy
+            target: 8.135.20.173
+            command: |
+              ssh root@8.135.20.173 "docker pull ${IMAGE}"
+              ssh root@8.135.20.173 "docker stop hiking-test || true"
+              ssh root@8.135.20.173 "docker rm hiking-test || true"
+              ssh root@8.135.20.173 "docker run -d -p 8080:8080 --name hiking-test ${IMAGE}"

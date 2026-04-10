@@ -1,0 +1,30 @@
+server:
+  port: 3000
+
+spring:
+  application:
+    name: @artifactId@
+  cloud:
+    nacos:
+      username: nacos
+      password: nacos
+      discovery:
+        server-addr: ${NACOS_HOST:127.0.0.1}:${NACOS_PORT:8848}
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+  config:
+    import:
+      - optional:nacos:application-dev.yml
+      - optional:nacos:${spring.application.name}-dev.yml
+
+security:
+  encode-key: 'thanks,pig4cloud'
+  ignore-clients:
+    - test
+    - client
+    - open
+    - app
+    - pig
+
+
+

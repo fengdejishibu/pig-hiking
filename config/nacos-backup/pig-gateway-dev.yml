@@ -1,0 +1,40 @@
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # 认证中心
+            - id: pig-auth
+              uri: lb://pig-auth
+              predicates:
+                - Path=/auth/**
+            #UPMS 模块
+            - id: pig-upms-biz
+              uri: lb://pig-upms-biz
+              predicates:
+                - Path=/admin/**
+              filters:
+                # 限流配置
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: '#{@remoteAddrKeyResolver}'
+                    redis-rate-limiter.replenishRate: 100
+                    redis-rate-limiter.burstCapacity: 200
+            # 代码生成模块
+            - id: pig-codegen
+              uri: lb://pig-codegen
+              predicates:
+                - Path=/gen/**
+            # 代码生成模块
+            - id: pig-quartz
+              uri: lb://pig-quartz
+              predicates:
+                - Path=/job/**
+            # 固定路由转发配置 无修改
+            - id: openapi
+              uri: lb://pig-gateway
+              predicates:
+                - Path=/v3/api-docs/**
+              filters:
+                - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/$\{path}/v3/api-docs
